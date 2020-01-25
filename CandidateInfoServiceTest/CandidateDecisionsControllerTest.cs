@@ -11,29 +11,74 @@ using Xunit;
 
 namespace CandidateInfoServiceTest
 {
-    public class CandidateDecisionsControllerTest
+    public class CandidateInfoControllerTest
     {
+        private CandidateInfoController _controller;
+        private CandidateContext _dbContext;
+
+        public CandidateInfoControllerTest()
+        {
+            InitController();
+        }
+
+        private void InitController()
+        {
+            var optionsBuilder = new DbContextOptionsBuilder<CandidateContext>();
+            optionsBuilder.UseInMemoryDatabase("testDatabase");
+            _dbContext = new CandidateContext(optionsBuilder.Options);
+            _controller = new CandidateInfoController(_dbContext);
+        }
+
+        private async Task<CandidateInfo>  SetupPrimaryCandidate()
+        {
+            var candidate = new CandidateInfo
+            {
+                FirstName = "Jack",
+                LastName = "Snow",
+                IsGoingToHaveOffer = false
+            };
+            await _controller.PostCandidate(candidate);
+
+            return candidate;
+        }
+
         [Fact]
         public async Task ShouldReturnCorrectNumberOfPostedCandidates()
         {
-            var optionsBuilder = new DbContextOptionsBuilder<CandidateContext>();
-            optionsBuilder.UseInMemoryDatabase("test");
-            var dbContext = new CandidateContext(optionsBuilder.Options);
+            _dbContext.Database.EnsureDeleted();
+            await SetupPrimaryCandidate();
 
-            var controller = new CandidateDecisionsController(dbContext);
-            var decision = new CandidateDecision
-            {
-                FirstName = "Jack", Id = 0, LastName = "Snow", IsGoingToHaveOffer = true
-            };
-            await controller.PostCandidateDecision(decision);
+            var result = await _controller.GetCandidates();
 
-            var result = await controller.GetDecisionItems();
-
-            var actionResult = result.Should().BeOfType<ActionResult<IEnumerable<CandidateDecision>>>().Subject;
-            var candidateDecisionsList = actionResult.Value.Should().BeAssignableTo<IEnumerable<CandidateDecision>>().Subject;
+            var actionResult = result.Should().BeOfType<ActionResult<IEnumerable<CandidateInfo>>>().Subject;
+            var candidateDecisionsList = actionResult.Value.Should().BeAssignableTo<IEnumerable<CandidateInfo>>().Subject;
 
             candidateDecisionsList.Count().Should().Be(1);
         }
+
+        [Fact]
+        public async Task ShouldGetCandidateById()
+        {
+            _dbContext.Database.EnsureDeleted();
+            var candidate = await SetupPrimaryCandidate();
+            var result = await _controller.GetCandidate(candidate.Id);
+
+            var actionResult = result.Should().BeOfType<ActionResult<CandidateInfo>>().Subject;
+            actionResult.Value.Id.Should().Be(candidate.Id);
+        }
+        
+        [Fact]
+        public async Task ShouldRemoveCandidateFromDatabase()
+        {
+            _dbContext.Database.EnsureDeleted();
+            var candidate = await SetupPrimaryCandidate();
+            var result = await _controller.DeleteCandidate(candidate.Id);
+
+            var actionResult = result.Should().BeOfType<ActionResult<CandidateInfo>>().Subject;
+            actionResult.Value.Id.Should().Be(candidate.Id);
+
+        }
+
     }
 
     

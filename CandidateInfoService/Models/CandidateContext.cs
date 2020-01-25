@@ -12,7 +12,7 @@ namespace CandidateInfoService.Models
         {
         }
 
-        public DbSet<CandidateDecision> DecisionItems { get; set; }
+        public DbSet<CandidateInfo> Candidates { get; set; }
 
     }
 }

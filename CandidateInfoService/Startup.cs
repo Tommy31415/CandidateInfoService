@@ -21,11 +21,11 @@ namespace CandidateInfoService
         public void ConfigureServices(IServiceCollection services)
         {
             services.AddDbContext<CandidateContext>(opt =>
-                opt.UseInMemoryDatabase("CandidatesDecisions"));
+                opt.UseInMemoryDatabase("CandidateDatabase"));
             services.AddControllers();
             services.AddSwaggerGen(c =>
             {
-                c.SwaggerDoc("v1", new OpenApiInfo { Title = "Candidate Decisions API", Version = "v1" });
+                c.SwaggerDoc("v1", new OpenApiInfo { Title = "Candidate Info API", Version = "v1" });
             });
         }
 
